@@ -111,14 +111,14 @@ export default class DisplaySketches1 extends React.Component {
   }
 
   removeSketch = async () => {
-    const originalImage = app.storage().ref().child(this.props.email + "/" + this.state.sname);
-    const predictedImage = app.storage().ref().child(this.props.email + "/" + this.state.sname + "-predicted");
-    const codeFile = app.storage().ref().child(this.props.email + "/" + this.state.sname + "-code.js");
+    const originalImage = app.storage().ref().child(this.props.param.email + "/" + this.state.sname);
+    const predictedImage = app.storage().ref().child(this.props.param.email + "/" + this.state.sname + "-predicted");
+    const codeFile = app.storage().ref().child(this.props.param.email + "/" + this.state.sname + "-code.js");
 
     const sketchesRef = query(
       collection(db, "sketches"),
       where("name", "==", this.state.sname),
-      where("from", "==", this.props.email)
+      where("from", "==", this.props.param.email)
     );
 
     // Fetch the documents and delete them
@@ -184,7 +184,7 @@ export default class DisplaySketches1 extends React.Component {
                 {sketches.map((item, i) => (
                   <Card
                     key={i}
-                    onPress={() => this.showDetails(item.name, this.props.email)}
+                    onPress={() => this.showDetails(item.name, this.props.param.email)}
                     onLongPress={() => this.combinedFunction(item.name)}
                   >
                     <ImageLoad style={styles.image} loadingStyle={{ size: 'large', color: 'green' }} source={{ uri: item.original_img }} />

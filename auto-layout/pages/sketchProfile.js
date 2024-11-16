@@ -1,63 +1,107 @@
 import React, { Component } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  Linking
-} from 'react-native';
-import { Dimensions, BackHandler } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Image, Dimensions, BackHandler, Alert } from 'react-native';
 import ScalableImage from 'react-native-scalable-image';
 import { DotIndicator } from 'react-native-indicators';
+import { getFirestore, collection, query, where, onSnapshot } from 'firebase/firestore'; // Modular imports for Firestore
+import { app } from '../FirebaseConfig'; // Ensure this imports the Firebase app (initialized)
 
-export default class Signup extends React.Component {
+// Your SketchProfile component
+export default class SketchProfile extends Component {
   unsubscribe = null;
-  ref = this.props.db.collection("sketches").where("name", "==", this.props.sname).where("from", "==", this.props.email);
+  db = getFirestore(app); // Use the Firestore instance from Firebase config
 
   state = {
     isLoading: true,
     isEmpty: true,
     predicted_image: '',
-    codeUrl: ''
+    codeUrl: '',
+    imageStatus: ''
   };
 
   componentDidMount() {
-    this.unsubscribe = this.ref.onSnapshot(this.onImageLoad);
+    // Validate email and sketch name
+    const { email, sname } = this.props;
+
+    if (!email || !sname) {
+      console.warn('Email or sketch name is missing.');
+      return;
+    }
+
+    // Firestore query for the sketch details
+    const sketchesRef = collection(this.db, 'sketches');
+    const q = query(sketchesRef, where('name', '==', sname), where('from', '==', email));
+
+    // Listen for real-time updates
+    this.unsubscribe = onSnapshot(q, this.onImageLoad);
+
+    // Set up back button handler to navigate back
     this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      this.goBack(); // works best when the goBack is async
-      return true;
+      this.goBack();
+      return true; // Prevent default behavior
     });
   }
 
   componentWillUnmount() {
-    this.unsubscribe = null;
-    this.backHandler.remove();
+    if (this.unsubscribe) {
+      this.unsubscribe(); // Unsubscribe from Firestore updates
+    }
+    if (this.backHandler) {
+      this.backHandler.remove(); // Clean up back handler
+    }
   }
 
   // Navigate back to the list of sketches
   async goBack() {
-    let email = this.props.email;
-    this.props.navigation.navigate('ListSketches', { email: email });
+    const { email } = this.props;
+    this.props.navigation.navigate('ListSketches', { email });
   }
 
   // Navigate to the layout display
   displayLayout = () => {
-    let sname = this.props.sname;
-    let email = this.props.email;
-    this.props.navigation.navigate('DisplayLayout', { email: email, sname: sname });
+    const { sname, email } = this.props;
+    this.props.navigation.navigate('DisplayLayout', { email, sname });
   };
 
   // Navigate to the source code display
   displayCode = () => {
-    let sname = this.props.sname;
-    let email = this.props.email;
-    let url = this.state.codeUrl;
-    this.props.navigation.navigate('DisplaySourceCode', { email: email, sname: sname, fileUrl: url });
+    const { sname, email } = this.props;
+    const { codeUrl } = this.state;
+    this.props.navigation.navigate('DisplaySourceCode', { email, sname, fileUrl: codeUrl });
+  };
+
+  // Firestore snapshot listener callback to handle image data
+  onImageLoad = (querySnapshot) => {
+    const sketches = [];
+    if (querySnapshot.empty) {
+      this.setState({
+        isLoading: false,
+        isEmpty: true
+      });
+    } else {
+      querySnapshot.forEach((doc) => {
+        const { predicted_url, code_url, num_predictions } = doc.data();
+
+        if (num_predictions === 0) {
+          this.setState({
+            isLoading: false,
+            isEmpty: true
+          });
+        }
+
+        if (predicted_url !== "") {
+          this.setState({
+            predicted_image: predicted_url,
+            codeUrl: code_url,
+            isLoading: false,
+            isEmpty: false
+          });
+        }
+      });
+    }
   };
 
   render() {
-    const { isLoading, isEmpty, codeUrl } = this.state;
+    const { isLoading, isEmpty, predicted_image, codeUrl, imageStatus } = this.state;
 
     return (
       <View style={styles.container}>
@@ -79,9 +123,9 @@ export default class Signup extends React.Component {
                 <ScalableImage
                   width={Dimensions.get('window').width + 50}
                   height={Dimensions.get('window').height - 320}
-                  source={{ uri: this.state.predicted_image }}
+                  source={{ uri: predicted_image }}
                 />
-                <Text>{this.state.imageStatus}</Text>
+                <Text>{imageStatus}</Text>
                 <TouchableOpacity style={styles.button} onPress={this.displayLayout}>
                   <Text style={styles.buttonText}>Show Layout</Text>
                 </TouchableOpacity>
@@ -99,30 +143,6 @@ export default class Signup extends React.Component {
       </View>
     );
   }
-
-  // Firestore listener callback
-  onImageLoad = (querySnapshot) => {
-    querySnapshot.forEach((doc) => {
-      const predicted_img = doc.data().predicted_url;
-      const code_url = doc.data().code_url;
-      const num_predictions = doc.data().num_predictions;
-
-      if (num_predictions === 0) {
-        this.setState({
-          isLoading: false
-        });
-      }
-
-      if (predicted_img !== "") {
-        this.setState({
-          predicted_image: predicted_img,
-          codeUrl: code_url,
-          isLoading: false,
-          isEmpty: false
-        });
-      }
-    });
-  };
 }
 
 const styles = StyleSheet.create({

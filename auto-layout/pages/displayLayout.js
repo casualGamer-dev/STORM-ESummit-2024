@@ -2,15 +2,19 @@ import React, { Component } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, TextInput, Switch, Image } from 'react-native';
 
 export default class Signup extends React.Component {
-  unsubscribe = null;
-  ref = this.props.db.collection("sketches").where("name", "==", this.props.sname).where("from", "==", this.props.email);
+  unsubscribe = null; 
 
   state = {
     widgets: [],
   };
 
   componentDidMount() {
-    this.unsubscribe = this.ref.onSnapshot(this.onDataLoad, this.handleError);
+
+    const sketchesRef = collection(db, 'sketches');
+    const q = query(sketchesRef, where('from', '==', email));
+
+    // Listen for real-time updates
+    this.unsubscribe = onSnapshot(q, this.onCollectionUpdate);
   }
 
   componentWillUnmount() {

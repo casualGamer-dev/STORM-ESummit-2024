@@ -27,7 +27,7 @@ export default class DisplaySketches extends React.Component {
       return;
     }
 
-    // Firestore query using modular SDK
+  
     const sketchesRef = collection(db, 'sketches');
     const q = query(sketchesRef, where('from', '==', email));
 

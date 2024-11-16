@@ -1,14 +1,12 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Image, Dimensions, BackHandler, Alert } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Image, Dimensions, BackHandler } from 'react-native';
 import ScalableImage from 'react-native-scalable-image';
 import { DotIndicator } from 'react-native-indicators';
-import { getFirestore, collection, query, where, onSnapshot } from 'firebase/firestore'; // Modular imports for Firestore
-import { app } from '../FirebaseConfig'; // Ensure this imports the Firebase app (initialized)
+import { getFirestore, collection, query, where, onSnapshot } from 'firebase/firestore'; // Modular Firestore imports
+import { db } from '../FirebaseConfig'; // Import Firestore from FirebaseConfig
 
-// Your SketchProfile component
 export default class SketchProfile extends Component {
   unsubscribe = null;
-  db = getFirestore(app); // Use the Firestore instance from Firebase config
 
   state = {
     isLoading: true,
@@ -18,17 +16,18 @@ export default class SketchProfile extends Component {
     imageStatus: ''
   };
 
+  // Firestore data fetch and listener setup
   componentDidMount() {
-    // Validate email and sketch name
     const { email, sname } = this.props;
 
+    // Validate email and sketch name before querying Firestore
     if (!email || !sname) {
       console.warn('Email or sketch name is missing.');
       return;
     }
 
-    // Firestore query for the sketch details
-    const sketchesRef = collection(this.db, 'sketches');
+    // Firestore query to fetch sketch details
+    const sketchesRef = collection(db, 'sketches');  // Use imported 'db' from FirebaseConfig
     const q = query(sketchesRef, where('name', '==', sname), where('from', '==', email));
 
     // Listen for real-time updates
@@ -37,16 +36,17 @@ export default class SketchProfile extends Component {
     // Set up back button handler to navigate back
     this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       this.goBack();
-      return true; // Prevent default behavior
+      return true; // Prevent default back button behavior
     });
   }
 
   componentWillUnmount() {
+    // Clean up Firestore listener and back handler when component unmounts
     if (this.unsubscribe) {
-      this.unsubscribe(); // Unsubscribe from Firestore updates
+      this.unsubscribe(); // Unsubscribe from Firestore real-time listener
     }
     if (this.backHandler) {
-      this.backHandler.remove(); // Clean up back handler
+      this.backHandler.remove(); // Remove back button handler
     }
   }
 
@@ -56,48 +56,48 @@ export default class SketchProfile extends Component {
     this.props.navigation.navigate('ListSketches', { email });
   }
 
-  // Navigate to the layout display
+  // Navigate to the layout display screen
   displayLayout = () => {
     const { sname, email } = this.props;
     this.props.navigation.navigate('DisplayLayout', { email, sname });
   };
 
-  // Navigate to the source code display
+  // Navigate to the source code display screen
   displayCode = () => {
     const { sname, email } = this.props;
     const { codeUrl } = this.state;
     this.props.navigation.navigate('DisplaySourceCode', { email, sname, fileUrl: codeUrl });
   };
 
-  // Firestore snapshot listener callback to handle image data
+  // Firestore snapshot listener callback to update the state with sketch data
   onImageLoad = (querySnapshot) => {
-    const sketches = [];
     if (querySnapshot.empty) {
       this.setState({
         isLoading: false,
         isEmpty: true
       });
-    } else {
-      querySnapshot.forEach((doc) => {
-        const { predicted_url, code_url, num_predictions } = doc.data();
-
-        if (num_predictions === 0) {
-          this.setState({
-            isLoading: false,
-            isEmpty: true
-          });
-        }
-
-        if (predicted_url !== "") {
-          this.setState({
-            predicted_image: predicted_url,
-            codeUrl: code_url,
-            isLoading: false,
-            isEmpty: false
-          });
-        }
-      });
+      return;
     }
+
+    querySnapshot.forEach((doc) => {
+      const { predicted_url, code_url, num_predictions } = doc.data();
+
+      if (num_predictions === 0) {
+        this.setState({
+          isLoading: false,
+          isEmpty: true
+        });
+      }
+
+      if (predicted_url !== "") {
+        this.setState({
+          predicted_image: predicted_url,
+          codeUrl: code_url,
+          isLoading: false,
+          isEmpty: false
+        });
+      }
+    });
   };
 
   render() {
@@ -145,6 +145,7 @@ export default class SketchProfile extends Component {
   }
 }
 
+// Styles for the SketchProfile component
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#FAFAFA',

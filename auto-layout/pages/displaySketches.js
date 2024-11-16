@@ -20,7 +20,7 @@ export default class DisplaySketches extends React.Component {
 
   componentDidMount() {
     // Validate email before querying
-    const { email } = this.props;
+    const { email } = this.props.params.route;
     console.log(email)
     if (!email) {
       console.warn('Email is undefined, cannot query sketches.');
@@ -67,9 +67,9 @@ export default class DisplaySketches extends React.Component {
   }
 
   removeSketch = async () => {
-    const originalImage = app.storage().ref().child(this.props.email + "/" + this.state.sname);
-    const predictedImage = app.storage().ref().child(this.props.email + "/" + this.state.sname + "-predicted");
-    const codeFile = app.storage().ref().child(this.props.email + "/" + this.state.sname + "-code.js");
+    const originalImage = app.storage().ref().child(this.props.param.email + "/" + this.state.sname);
+    const predictedImage = app.storage().ref().child(this.props.param.email + "/" + this.state.sname + "-predicted");
+    const codeFile = app.storage().ref().child(this.props.param.email + "/" + this.state.sname + "-code.js");
 
     const { email, db } = this.props;
     const sketchesRef = collection(db, 'sketches');
@@ -121,7 +121,7 @@ export default class DisplaySketches extends React.Component {
               renderItem={({ item }) => (
                 <ListItem
                   style={styles.listItem}
-                  button onPress={() => { this.showDetails(item.name, this.props.email) }}
+                  button onPress={() => { this.showDetails(item.name, this.props.param.email) }}
                   onLongPress={() => { this.combinedFunction(item.name) }}
                   roundAvatar
                   title={`${item.name.replace(/_/g, " ")}`}

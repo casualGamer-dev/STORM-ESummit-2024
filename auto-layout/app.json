@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "auto-layout",
-    "slug": "auto-layout",
+    "name": "ai-code-gen",
+    "slug": "ai-code-gen",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

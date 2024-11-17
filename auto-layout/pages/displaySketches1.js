@@ -91,6 +91,7 @@ export default class DisplaySketches1 extends React.Component {
 
   showDetails = (name, email) => {
     this.props.navigation.navigate('SketchProfile', { sname: name, email: email });
+    console.log(email)
   };
 
   getSketchName(name) {

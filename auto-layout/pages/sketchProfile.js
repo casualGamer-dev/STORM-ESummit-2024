@@ -19,7 +19,8 @@ export default class SketchProfile extends Component {
 
   // Firestore data fetch and listener setup
   componentDidMount() {
-    const { email, sname } = this.props.route.params;
+    const { email, sname } = this.props.route.params; 
+    console.log("ROUTE HAS BEEN MOUNTED")
    console.log(this.props.route.params)
     // Validate email and sketch name before querying Firestore
     if (!email || !sname) {
@@ -133,7 +134,7 @@ export default class SketchProfile extends Component {
             <Image style={styles.infoImg} source={require('../assets/ml.png')} />
             <Text style={styles.infoText}>Please wait while your sketch is being processed.</Text>
             {/* Fix: Pass key directly to DotIndicator and spread other props */}
-            <DotIndicator color="#66BB6A" key={"loading-indicator"} />
+            <DotIndicator color={"#66BB6A"} key={"loading-indicator"} />
           </View>
         ) : (
           <View style={styles.container}>
@@ -172,7 +173,7 @@ export default class SketchProfile extends Component {
 // Styles for the SketchProfile component
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FAFAFA',
+    backgroundColor: '#0000',
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center'
@@ -192,7 +193,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#ffffff',
+    color: '#fff',
     textAlign: 'center',
     fontFamily: 'Roboto'
   },

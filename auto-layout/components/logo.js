@@ -15,7 +15,7 @@ export default class Logo extends React.Component{
 				{/* <Image  style={{width:this.props.width, height: this.props.height}}
           			source={require('../assets/icon.png')}/>	
 				</View> */}
-				<Text style={{ fontFamily: 'System-code', fontSize: 56 }}>&lt;Sketch ML/&gt;</Text>
+				<Text style={{ fontFamily: 'System-code', fontSize: 56 }}>&lt;auto layout/&gt;</Text>
 			</View>
 			)
 	}

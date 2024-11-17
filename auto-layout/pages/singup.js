@@ -116,7 +116,7 @@ export default class Signup extends Component {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FAFAFA',
+    backgroundColor: '#0000',
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#ffffff',
+    color: '#fff',
     textAlign: 'center',
   },
   error_message: {

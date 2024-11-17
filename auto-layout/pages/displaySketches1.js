@@ -67,7 +67,7 @@ export default class DisplaySketches1 extends React.Component {
 
   newSketch = () => {
     let email = this.props.route.params;
-    console.log(email)
+    console.log(this.props.route.params)
     this.props.navigation.navigate('Sketch', { email });
   };
 
@@ -205,7 +205,7 @@ export default class DisplaySketches1 extends React.Component {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FAFAFA',
+    backgroundColor: '#0000',
     flex: 1,
   },
   container2: {
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#ffffff',
+    color: '#fff',
     textAlign: 'center',
     fontFamily: 'Roboto',
   },

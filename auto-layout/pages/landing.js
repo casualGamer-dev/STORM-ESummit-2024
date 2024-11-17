@@ -3,14 +3,20 @@ import { StyleSheet, Text, View, Image, TouchableOpacity, ActivityIndicator, Ale
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { useNavigation } from '@react-navigation/native';
-import { storage } from '../FirebaseConfig';  // Import the storage instance
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';  // Import necessary Firebase Storage methods
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'; // Import Firestore methods
 
-export default function Landing({ email, sname, db }) {
+import { storage, db } from '../FirebaseConfig';  // Import Firebase instance
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';  
+import { collection, query, where, getDocs, updateDoc } from 'firebase/firestore'; // Firestore methods
+
+export default function Landing({ route }) {
+  const { email, sname } = route.params; // Access email and sname from route.params
   const [uploading, setUploading] = useState(false);
   const navigation = useNavigation();
 
+  console.log('Received email:', email);  // Log email to check if it's being passed
+  console.log('Received sketch name:', sname);  // Log sketch name to check if it's being passed
+
+  // Function to request camera and gallery permissions
   const requestPermissions = async () => {
     const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
     const galleryPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -22,6 +28,7 @@ export default function Landing({ email, sname, db }) {
     return true;
   };
 
+  // Function to take a picture using the camera
   const takePicture = async () => {
     const permissionsGranted = await requestPermissions();
     if (!permissionsGranted) return;
@@ -33,6 +40,7 @@ export default function Landing({ email, sname, db }) {
     handleImagePicked(result);
   };
 
+  // Function to choose an image from the gallery
   const chooseFromGallery = async () => {
     const permissionsGranted = await requestPermissions();
     if (!permissionsGranted) return;
@@ -44,6 +52,7 @@ export default function Landing({ email, sname, db }) {
     handleImagePicked(result);
   };
 
+  // Function to handle the picked image (either from camera or gallery)
   const handleImagePicked = async (pickerResult) => {
     try {
       setUploading(true);
@@ -57,15 +66,18 @@ export default function Landing({ email, sname, db }) {
 
         const manipResult = await ImageManipulator.manipulateAsync(
           uri,
-          [{ resize: { width: 600, height: 800 } }],
-          { compress: 1, format: 'jpeg', base64: false }
+          [{ resize: { width: 600, height: 800 } }], // Resize image to fit
+          { compress: 1, format: 'jpeg', base64: false } // Compress and convert to jpeg
         );
 
-        // Upload the image to Firebase
+        // Upload the image to Firebase Storage
         await uploadImageAsync(manipResult.uri, email, sname);
 
+        // Get the image URL from Firebase Storage
         const storageRef = ref(storage, `${email}/${sname}`);
         const imageUrl = await getDownloadURL(storageRef);
+
+        // Update the Firestore document with the new image URL
         addUrlToDatabase(imageUrl);
         navigation.navigate('SketchProfile', { email, sname });
       }
@@ -76,27 +88,42 @@ export default function Landing({ email, sname, db }) {
     }
   };
 
+  // Function to add image URL to Firestore database
   const addUrlToDatabase = async (image_url) => {
     try {
+      // Validate email and sname
+      if (!email || !sname) {
+        console.error('Error: email or sname is undefined.');
+        return;
+      }
+
       const sketchesRef = collection(db, 'sketches');
       const q = query(
         sketchesRef,
-        where('name', '==', sname),
-        where('from', '==', email)
+        where('name', '==', sname), // Ensure 'sname' is not undefined
+        where('from', '==', email) // Ensure 'email' is not undefined
       );
+
+      // Fetch the documents
       const querySnapshot = await getDocs(q);
 
+      if (querySnapshot.empty) {
+        console.log('No sketches found with the given name and email.');
+        return;
+      }
+
+      // Update the document with the image URL
       querySnapshot.forEach(async (doc) => {
-        if (querySnapshot.size > 0) {
-          const docRef = doc(db, 'sketches', doc.id);
-          await updateDoc(docRef, { image_url });
-        }
+        const docRef = doc(db, 'sketches', doc.id);
+        await updateDoc(docRef, { image_url });
+        console.log(`Image URL added to the document: ${doc.id}`);
       });
     } catch (error) {
       console.error('Error adding image URL to database:', error);
     }
   };
 
+  // Function to upload image to Firebase Storage
   const uploadImageAsync = async (uri, email, sname) => {
     const blob = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -119,7 +146,7 @@ export default function Landing({ email, sname, db }) {
   return (
     <View style={styles.container}>
       {uploading ? (
-        <ActivityIndicator size="large" color="#66BB6A" />
+        <ActivityIndicator size={"large"} color={"#66BB6A"} />
       ) : (
         <View style={styles.container}>
           <Text style={styles.infoText}>
@@ -167,7 +194,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#ffffff',
+    color: '#fff',
     textAlign: 'center',
     fontFamily: 'Roboto',
   },

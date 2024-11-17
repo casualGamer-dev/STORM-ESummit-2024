@@ -8,26 +8,32 @@ export default class DisplaySketches extends React.Component {
   unsubscribe = null;
 
   state = {
-    sname: '',
+    sname: '', // Default sname is empty
     sketches: [],
     isEmpty: false,
   };
 
+  // Updated newSketch to pass both email and sname correctly
   newSketch = () => {
-    let email = this.props.param.email;
-    this.props.navigation.navigate('Sketch', { email });
+    const { email } = this.props.route.params; // Get email from route params
+    const { sname } = this.state; // Get sname from the state
+    console.log("Email: ", email);
+    console.log("Sname: ", sname); // Debugging log to check if sname is set
+    if (!sname) {
+      console.warn('Sketch name is undefined!');
+      return;
+    }
+    this.props.navigation.navigate('Sketch', { email, sname });
   };
 
   componentDidMount() {
-    // Validate email before querying
-    const { email } = this.props.params.route;
-    console.log(email)
+    const { email } = this.props.route.params; // Get email from route params
+    console.log("Component Mounted. Email: ", email); // Debugging log to track email
     if (!email) {
       console.warn('Email is undefined, cannot query sketches.');
       return;
     }
 
-  
     const sketchesRef = collection(db, 'sketches');
     const q = query(sketchesRef, where('from', '==', email));
 
@@ -42,10 +48,12 @@ export default class DisplaySketches extends React.Component {
   }
 
   showDetails = (name, email) => {
+    console.log("Show Details - Name: ", name, "Email: ", email); // Debugging log to track details
     this.props.navigation.navigate('SketchProfile', { sname: name, email: email });
   };
 
   getSketchName(name) {
+    console.log("Setting sname: ", name); // Debugging log to track sname update
     this.setState({ sname: name });
   }
 
@@ -67,9 +75,9 @@ export default class DisplaySketches extends React.Component {
   }
 
   removeSketch = async () => {
-    const originalImage = app.storage().ref().child(this.props.param.email + "/" + this.state.sname);
-    const predictedImage = app.storage().ref().child(this.props.param.email + "/" + this.state.sname + "-predicted");
-    const codeFile = app.storage().ref().child(this.props.param.email + "/" + this.state.sname + "-code.js");
+    const originalImage = app.storage().ref().child(this.props.route.params.email + "/" + this.state.sname);
+    const predictedImage = app.storage().ref().child(this.props.route.params.email + "/" + this.state.sname + "-predicted");
+    const codeFile = app.storage().ref().child(this.props.route.params.email + "/" + this.state.sname + "-code.js");
 
     const { email, db } = this.props;
     const sketchesRef = collection(db, 'sketches');
@@ -93,7 +101,7 @@ export default class DisplaySketches extends React.Component {
         height: 1,
         width: "86%",
         backgroundColor: "#CED0CE",
-        marginLeft: "14%"
+        marginLeft: "14%",
       }}
     />
   );
@@ -121,8 +129,9 @@ export default class DisplaySketches extends React.Component {
               renderItem={({ item }) => (
                 <ListItem
                   style={styles.listItem}
-                  button onPress={() => { this.showDetails(item.name, this.props.param.email) }}
-                  onLongPress={() => { this.combinedFunction(item.name) }}
+                  button
+                  onPress={() => { this.showDetails(item.name, this.props.route.params.email); }}
+                  onLongPress={() => { this.combinedFunction(item.name); }}
                   roundAvatar
                   title={`${item.name.replace(/_/g, " ")}`}
                   avatar={{ uri: item.original_img }}
@@ -153,7 +162,7 @@ export default class DisplaySketches extends React.Component {
 
       this.setState({
         sketches,
-        isEmpty: false
+        isEmpty: false,
       });
     }
   };
@@ -163,29 +172,29 @@ const styles = StyleSheet.create({
   list: {
     flex: 1,
     marginTop: 20,
-    marginBottom: 20
+    marginBottom: 20,
   },
   container: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   img_container: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20
+    marginTop: 20,
   },
   no_results: {
     width: 250,
-    height: 250
+    height: 250,
   },
   button: {
     backgroundColor: '#5CB85C',
     padding: 10,
-    borderRadius: 5
+    borderRadius: 5,
   },
   buttonText: {
     color: '#fff',
-    fontWeight: 'bold'
-  }
+    fontWeight: 'bold',
+  },
 });

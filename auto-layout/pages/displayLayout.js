@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     flex: 2,
     backgroundColor: '#fff',
     borderWidth: 0.5,
-    borderColor: '#000',
+    borderColor: '#fff',
     height: 40,
     borderRadius: 5,
     margin: 15,
